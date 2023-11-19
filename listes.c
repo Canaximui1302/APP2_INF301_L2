@@ -7,6 +7,7 @@
 #endif
 #include "listes.h"
 
+
 /*
  *  Auteur(s) :
  *  Date :
@@ -16,36 +17,39 @@
 
 bool silent_mode = false;
 
-cellule_t *nouvelleCellule(void)
+
+cellule_t* nouvelleCellule (void)
 {
-    /* À compléter (utiliser malloc) */
-    // printf("\n>>>>>>>>>>> A Faire : liste.c/nouvelleCellule() <<<<<<<<<<<<<<<<\n");
     cellule_t *c = malloc(sizeof(cellule_t));
-    c->type = 0; 
+    c->type = 0;
     c->command = 0;
     c->suivant = NULL;
     return c;
 }
 
-void detruireCellule(cellule_t *cel) //fonction pour liberer la memoire d'une cellule
+
+void detruireCellule (cellule_t* cel)
 {
-    /* À compléter (utiliser free) */
-    // printf("\n>>>>>>>>>>> A Faire : liste.c/detruireCellule() <<<<<<<<<<<<<<<<\n");
-    if (cel->type == 1)
+    if(cel->type == 1)
     {
-        detruireSequence(cel->bloc);
+        detruireSequence(&(cel->bloc));
     }
     free(cel);
+    cel = NULL;
 }
 
-void detruireSequence(sequence_t *seq) //fonction pour liberer la memoire d'une sequence
+
+void detruireSequence(sequence_t **seq)
 {
-    if (seq == NULL || seq->tete == NULL)
+    if(*seq == NULL) return;
+    if((*seq)->tete == NULL)
+    {
+        free(*seq);
         return;
-    cellule_t *c = seq->tete;
-    //afficher(seq);
-    //printf("\n");
-    while (c != NULL) // boucle while pour detruire chaque cellule dans la sequence
+    }
+    cellule_t *c = (*seq)->tete;
+    free(*seq);
+    while(c!=NULL)
     {
         cellule_t *suiv = c->suivant;
         detruireCellule(c);
@@ -53,7 +57,26 @@ void detruireSequence(sequence_t *seq) //fonction pour liberer la memoire d'une 
     }
 }
 
-void ajoute_apres_val(cellule_t *c, char val) // ajouter un entier a la fin de sequence
+
+void detruire_sequence_nonrec(sequence_t *seq)
+{
+    if(seq == NULL) return;
+    if(seq->tete == NULL)
+    {
+        free(seq);
+        return;
+    }
+    cellule_t *c = seq->tete;
+    while(c!=NULL)
+    {
+        cellule_t *suiv = c->suivant;
+        free(c);
+        c = suiv;
+    }
+}
+
+
+void ajoute_apres_val(cellule_t *c, char val)
 {
     cellule_t *c_nouv = nouvelleCellule();
     c_nouv->type = 0;
@@ -62,7 +85,8 @@ void ajoute_apres_val(cellule_t *c, char val) // ajouter un entier a la fin de s
     c->suivant = c_nouv;
 }
 
-void ajoute_apres_bloc(cellule_t *c, sequence_t *bloc) // ajouter un bloc de code a la fin de sequence
+
+void ajoute_apres_bloc(cellule_t *c, sequence_t *bloc)
 {
     cellule_t *c_nouv = nouvelleCellule();
     c_nouv->type = 1;
@@ -71,9 +95,10 @@ void ajoute_apres_bloc(cellule_t *c, sequence_t *bloc) // ajouter un bloc de cod
     c->suivant = c_nouv;
 }
 
-void ajoute_debut_val(sequence_t *seq, char val) // ajouter un entier au debut de sequence
-{
 
+void ajoute_debut_val(sequence_t *seq, char val)
+{
+    
     cellule_t *c = nouvelleCellule();
     c->type = 0;
     c->command = val;
@@ -81,8 +106,9 @@ void ajoute_debut_val(sequence_t *seq, char val) // ajouter un entier au debut d
     seq->tete = c;
 }
 
-void ajoute_debut_bloc(sequence_t *seq, sequence_t *bloc) // ajouter un bloc de code au debut de sequence
-{ 
+
+void ajoute_debut_bloc(sequence_t *seq, sequence_t *bloc)
+{
     cellule_t *c = nouvelleCellule();
     c->type = 1;
     c->bloc = bloc;
@@ -90,55 +116,37 @@ void ajoute_debut_bloc(sequence_t *seq, sequence_t *bloc) // ajouter un bloc de 
     seq->tete = c;
 }
 
-cellule_t *conversion(char *texte, sequence_t *seq)
+
+int conversion (char *texte, sequence_t *seq)
 {
-    /* À compléter */
-    // printf("\n>>>>>>>>>>> A Faire : liste.c/conversion() <<<<<<<<<<<<<<<<\n");
     seq->tete = NULL;
-    cellule_t *c = seq->tete;
-    for (int i = 0; texte[i] != '\0'; i++)
+	cellule_t* c = seq->tete;
+    for(int i = 0; texte[i] != '\0'; i++)
     {
         sequence_t *bloc = NULL;
-        cellule_t *queue = NULL;
+        int long_bloc;
         if (texte[i] == ' ' || texte[i] == '\n')
-            continue;
-        if (texte[i] == '}') // fin d'un bloc de code
         {
-            if (c != NULL)
-            {
-                if (c->type == 1)
-                {
-                    c->command = 0; // on met 0 pour savoir la cellule n'est une commande, mais un bloc de code
-                }
-                c->type = i; // longueur du bloc
-            }
-            return c;
+            continue;
         }
-        if (texte[i] == '{') // debut d'un bloc de code
+        if(texte[i] == '}')
+        {
+            if(c != NULL)
+            {
+                return i;
+            }
+            return 0;
+        }
+        if(texte[i] == '{')
         {
             bloc = malloc(sizeof(sequence_t));
             bloc->tete = NULL;
-            queue = conversion((texte + i + 1), bloc); // appel recursive pour conversion le bloc imbrique
-            if (!silent_mode)
-                printf("\nElement #%d: %c\n", i, texte[i]); //////DEBUG
-            if (queue != NULL)
-            {
-                i += queue->type + 1;
-                if (!queue->command)
-                {
-                    queue->type = 1; // pour marquer que queue est un bloc
-                }
-                else
-                {
-                    queue->type = 0; // queue est une commande
-                }
-            }
-            else
-                i++;
+            long_bloc = conversion((texte+i+1), bloc);
+            i += long_bloc + 1;
         }
-        if (c == NULL) // la queue de la sequence ou la sequence vide
+        if(c == NULL)
         {
-            if (texte[i] == '}') // si la cellule est un bloc de code
+            if(texte[i] == '}')
             {
                 ajoute_debut_bloc(seq, bloc);
             }
@@ -146,14 +154,11 @@ cellule_t *conversion(char *texte, sequence_t *seq)
             {
                 ajoute_debut_val(seq, texte[i]);
             }
-            if (!silent_mode)
-                printf("\nElement #%d: %c\n", i, texte[i]); //////DEBUG
-            afficher(seq);
             c = seq->tete;
         }
-        else
+        else 
         {
-            if (texte[i] == '}')
+            if(texte[i] == '}')
             {
                 ajoute_apres_bloc(c, bloc);
             }
@@ -161,82 +166,23 @@ cellule_t *conversion(char *texte, sequence_t *seq)
             {
                 ajoute_apres_val(c, texte[i]);
             }
-            if (!silent_mode)
-                printf("\nElement #%d: %c\n", i, texte[i]); //////DEBUG
-            afficher(seq);
             c = c->suivant;
         }
     }
-    return NULL;
+    return 0;
 }
 
-cellule_t *enlever_premier_element(sequence_t *seq) 
-{
-    cellule_t *c = seq->tete;
-    seq->tete = c->suivant;
-    c->suivant = NULL;
-    return c;
-}
 
-// void copier(sequence_t *seq, sequence_t *copie, cellule_t *queue)
-// {
-//     cellule_t *c = seq->tete;
-//     copie->tete = NULL;
-//     queue = copie->tete;
-//     if(c != NULL)
-//     {
-//         if(c->type == 0)
-//         {
-//             ajoute_debut_val(copie, c->command);
-//             printf("COPIE: \n");
-//             afficher(copie);
-//         }
-//         else
-//         {
-//             sequence_t *s1 = malloc(sizeof(sequence_t));
-//             cellule_t *q1 = malloc(sizeof(cellule_t));
-//             afficher(c->bloc);
-//             copier(c->bloc, s1, q1);
-//             ajoute_debut_bloc(copie, s1, q1);
-//         }
-//         queue = copie->tete;
-//         c = c->suivant;
-//     }
-//     while(c != NULL)
-//     {
-//         if(c->type == 0)
-//         {
-//             ajoute_apres_val(queue, c->command);
-//             printf("COPIE: \n");
-//             afficher(copie);
-//         }
-//         else
-//         {
-//             sequence_t *s1 = malloc(sizeof(sequence_t));
-//             cellule_t *q1 = malloc(sizeof(cellule_t));
-//             afficher(c->bloc);
-//             copier(c->bloc, s1, q1);
-//             ajoute_apres_bloc(queue, s1, q1);
-//         }
-//         queue = queue->suivant;
-//         c = c->suivant;
-//     }
-// }
-
-void afficher(sequence_t *seq)
+void afficher (sequence_t* seq)
 {
-    if (!silent_mode)
+    if(!silent_mode)
     {
-        // assert (seq); /* Le pointeur doit être valide */
-        /* À compléter */
-        // printf("\n>>>>>>>>>>> A Faire : liste.c/afficher() <<<<<<<<<<<<<<<<\n");
-        if (seq == NULL)
-            return;
+        assert (seq); /* Le pointeur doit être valide */
+        if(seq == NULL) return;
         cellule_t *c = seq->tete;
-        while (c != NULL)
+        while(c != NULL)
         {
-            if (c->type == 0)
-                printf("%c", c->command);
+            if(c->type == 0) printf("%c", c->command);
             else
             {
                 printf("{");
@@ -247,3 +193,4 @@ void afficher(sequence_t *seq)
         }
     }
 }
+

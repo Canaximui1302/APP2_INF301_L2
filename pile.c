@@ -4,8 +4,25 @@
 #include "pile.h"
 #include "listes.h"
 
+void detruire_pile_nonrec(pile **p)
+{
+    if(*p == NULL) return;
+    if((*p)->tete == NULL)
+    {
+        free(*p);
+        return;
+    }
+    cellule_p *c = (*p)->tete;
+    free(*p);
+    while(c!=NULL)
+    {
+        cellule_p *suiv = c->suivant;
+        free(c);
+        c = suiv;
+    }
+}
 
-void empiler_val(pile *p, int val) // empiler un entier
+void empiler_val(pile *p, int val)
 {
     cellule_p *c = malloc(sizeof(cellule_p));
     c->type = 0;
@@ -14,26 +31,16 @@ void empiler_val(pile *p, int val) // empiler un entier
     p->tete = c;
 }
 
-void empiler_bloc(pile *p, sequence_t *seq) // empiler un bloc de code
+void empiler_bloc(pile *p, sequence_t *seq)
 {
     cellule_p *c = malloc(sizeof(cellule_p));
     c->type = 1;
     c->seq = seq;
     c->suivant = p->tete;
     p->tete = c;
-    if(c->seq->tete != NULL)
-    {
-        printf("Empilage de ");
-        afficher(c->seq);
-        
-    }
-    else
-    {
-        printf("Empilage de bloc vide\n");
-    }
 }
 
-int depiler_val(pile *p) // depiler un entier
+int depiler_val(pile *p)
 {
     int val = p->tete->val;
     cellule_p *c = p->tete;
@@ -42,15 +49,15 @@ int depiler_val(pile *p) // depiler un entier
     return val;
 }
 
-void depiler_bloc(pile *p, sequence_t *seq) // depiler un bloc de code
+void depiler_bloc(pile *p, sequence_t **seq)
 {
     cellule_p *c = p->tete;
-    seq->tete = p->tete->seq->tete;
+    *seq = p->tete->seq;
     p->tete = p->tete->suivant;
     free(c);
 }
 
-void depiler(pile *p, int *val, sequence_t *seq) // empiler en utilisant les 2 fonctions ci-dessus
+void depiler(pile *p, int *val, sequence_t **seq)
 {
     cellule_p *c = p->tete;
     if(c->type == 0)

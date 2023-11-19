@@ -8,14 +8,16 @@ A lire absolument !
 
 Renseignez ici les noms des membres de votre binôme :
 
-Nom1 - prénom1 : PRECUP Gabriel
-Nom2 - prénom2 : NGUYEN Ho Minh Khanh
+Nom1 - prénom1 : NGUYEN Ho Minh Khanh
+Nom2 - prénom2 : PRECUP Gabriel
 
 Si vous avez des commentaires, remarques etc. pour le rendu, vous pouvez les 
 mettre ici:
 
-Observons les images générés après l'exécution des tests performances, nous voyons que les graphes sont des 
-droites, ce qui indique que la complexité générale de notre programme est linéaire (O(n)).
+...
+...
+...
+
 
 
 
